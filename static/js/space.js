@@ -1,7 +1,13 @@
 var scene = new THREE.Scene();
+var skyboxScene = new THREE.Scene();
 var camera;
+var skyboxCamera;
+var skybox;
 
-var renderer = new THREE.WebGLRenderer();
+
+
+var renderer = new THREE.WebGLRenderer({alpha: true});
+renderer.autoClear = false;
 renderer.setSize(window.innerWidth, window.innerHeight);
 document.body.appendChild(renderer.domElement);
 
@@ -87,20 +93,44 @@ var update = function() {
 	dx = dy = 0;
 }
 
+
+
+
 var render = function() {
 	update();
 	requestAnimationFrame(render);
 
-	// skyboxCamera.rotation.setEulerFromRotationMatrix(new THREE.Matrix4().extractRotation(camera.matrixWorld), skyboxCamera.eulerOrder);
-	// renderer.render(skyboxScene, skyboxCamera);
+	var r = camera.getWorldRotation();
+	skyboxCamera.rotation.x = r.x;
+	skyboxCamera.rotation.y = r.y;
+	skyboxCamera.rotation.z = r.z;
+
+	renderer.clear();
+	renderer.render(skyboxScene, skyboxCamera);
+	renderer.clearDepth();
 	renderer.render(scene, camera);
 };
 
 var init = function() {
-	camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+	camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 100000);
+
+	skyboxCamera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 100000);
+	
+	var skyGeometry = new THREE.CubeGeometry(50000,50000,50000);
+	var materials = Array(6).fill(new THREE.MeshBasicMaterial(
+		{
+			map:THREE.ImageUtils.loadTexture("img/skybox.png"),
+			side: THREE.BackSide
+		}));
+	var skyMaterial = new THREE.MeshFaceMaterial(materials);
+	var skyBox = new THREE.Mesh(skyGeometry,skyMaterial);
+	skyboxScene.add(skyBox);
+
+
 	camera.position.set(-150, 40, 0);
 	camera.rotation.set(0, -Math.PI / 2, 0);
 	player = newShip(new Vector3(0, 0, 0), new Vector3(10, 0, 0), new Vector3(0, 0, 0), new Vector3(0, 0, 0));
 	player.addCamera(camera);
+	
 	render();
 }
