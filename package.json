@@ -1,0 +1,25 @@
+{
+  "name": "spacemmo",
+  "version": "1.0.0",
+  "description": "",
+  "main": "server.js",
+  "dependencies": {
+    "express": "^4.14.1",
+    "socket.io": "^1.7.3"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node server.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ko-tori/spacemmo.git"
+  },
+  "author": "ko-tori",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/ko-tori/spacemmo/issues"
+  },
+  "homepage": "https://github.com/ko-tori/spacemmo#readme"
+}
