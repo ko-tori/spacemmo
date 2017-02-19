@@ -28,9 +28,9 @@ class Ship {
 	}
 
 	update() {
-		this.model.translateX(this.vel.x);
-		this.model.translateY(this.vel.y);
-		this.model.translateZ(this.vel.z);
+		this.model.translateX(this.vel.x*dt/17);
+		this.model.translateY(this.vel.y*dt/17);
+		this.model.translateZ(this.vel.z*dt/17);
 		this.model.rotateX(this.avel.x);
 		this.model.rotateY(this.avel.y);
 		this.model.rotateZ(this.avel.z);

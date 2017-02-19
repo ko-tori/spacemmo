@@ -12,12 +12,15 @@ renderer.autoClear = false;
 renderer.setSize(window.innerWidth, window.innerHeight);
 document.body.appendChild(renderer.domElement);
 
+var targetdx=0;
+var targetdy=0;
+
 var dx = 0;
 var dy = 0;
 
 function updatePosition(e) {
-	dx = e.movementX / 100;
-	dy = e.movementY / 100;
+	dx = e.movementX / 200;
+	dy = e.movementY / 200;
 }
 
 var canvas = document.querySelector('canvas');
@@ -56,7 +59,9 @@ var player;
 var ships = {};
 var lasers = [];
 var lastfiretime = 0;
-var time;
+var time = new Date().getTime();
+var oldtime = new Date().getTime();
+var dt = 0;
 var newShip = function(pos, vel, rot, avel) {
 	var ship = new Ship(pos, vel, rot, avel);
 	ships.push(ship);
@@ -76,8 +81,13 @@ var update = function() {
 	}
 	lasers = lasers.filter((i) => {return i;})
 
-	player.model.rotateY(-dx);
-	player.model.rotateZ(-dy);
+	targetdx += dx;
+	targetdy += dy;
+
+	player.model.rotateY(-targetdx/1.2);
+	player.model.rotateZ(-targetdy/1.2);
+	targetdx/=1.2;
+	targetdy/=1.2;
 	dx = dy = 0;
 	sendPositionUpdate();
 };
@@ -112,8 +122,11 @@ var fire = function(position, rotation){
 var render = function() {
 	update();
 	requestAnimationFrame(render);
-	time = new Date().getTime();
 
+	oldtime = time;
+	time = new Date().getTime();
+	dt = time-oldtime;
+	console.log(dt);
 	var r = camera.getWorldRotation();
 	skyboxCamera.rotation.x = r.x;
 	skyboxCamera.rotation.y = r.y;
