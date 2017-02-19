@@ -19,8 +19,8 @@ var dx = 0;
 var dy = 0;
 
 function updatePosition(e) {
-	dx = e.movementX / 200;
-	dy = e.movementY / 200;
+	dx = e.movementX / 500;
+	dy = e.movementY / 500;
 }
 
 var canvas = document.querySelector('canvas');
@@ -119,13 +119,11 @@ var fire = function(position, rotation) {
 };
 
 var render = function() {
-	update();
 	requestAnimationFrame(render);
 
 	oldtime = time;
 	time = new Date().getTime();
 	dt = time-oldtime;
-	console.log(dt);
 	var r = camera.getWorldRotation();
 	skyboxCamera.rotation.x = r.x;
 	skyboxCamera.rotation.y = r.y;
@@ -135,6 +133,7 @@ var render = function() {
 	renderer.render(skyboxScene, skyboxCamera);
 	renderer.clearDepth();
 	renderer.render(scene, camera);
+	update();
 };
 
 var init = function(startpos, startrot) {

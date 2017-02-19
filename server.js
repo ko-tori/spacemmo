@@ -16,6 +16,12 @@ var pickSpawn = function() {
 }
 
 var clients = {};
+var projectiles = [];
+var interval = false;
+
+function update() {
+
+}
 
 room.on("connection", function(socket) {
 	var startpos = pickSpawn();
@@ -30,10 +36,14 @@ room.on("connection", function(socket) {
 	}
 	clients[socket.client.id] = startobj;
 	socket.broadcast.emit('join', { id: socket.client.id, ship: startobj });
+	if (!interval)
+		interval = setInterval(update, 17);
 
 	socket.on('disconnect', function(data) {
 		delete clients[socket.client.id];
 		socket.broadcast.emit('leave', socket.client.id);
+		if (Object.keys(clients).length === 0)
+			clearInterval(interval);
 	});
 
 	socket.on('move', function(data) {
