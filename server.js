@@ -20,14 +20,16 @@ var clients = {};
 room.on("connection", function(socket) {
 	var startpos = pickSpawn();
 	var startrot = [0, 0, 0];
+	var startvel = [1, 0, 0];
+	var startobj = {pos: startpos, vel: startvel, rot: startrot};
 	socket.emit('init', { pos: startpos });
 	for (var id in clients) {
 		if (clients.hasOwnProperty(id)) {
-			socket.emit('join', { id: id, pos: clients[id].pos, rot: clients[id].rot });
+			socket.emit('join', { id: id, ship: clients[id]});
 		}
 	}
-	clients[socket.client.id] = { pos: startpos, rot: startrot };
-	socket.broadcast.emit('join', { id: socket.client.id, pos: startpos, rot: startrot });
+	clients[socket.client.id] = startobj;
+	socket.broadcast.emit('join', { id: socket.client.id, ship: startobj });
 
 	socket.on('disconnect', function(data) {
 		delete clients[socket.client.id];
@@ -40,6 +42,19 @@ room.on("connection", function(socket) {
 		ship.pos = data.pos;
 		ship.rot = data.rot;
 		socket.broadcast.emit('move', data);
+	});
+
+	socket.on('velchange', function(data) {
+		data.id = socket.client.id;
+		var ship = clients[data.id];
+		ship.vel = data.vel;
+		socket.broadcast.emit('velchange', data);
+	});
+
+	socket.on('laser', function(data) {
+		data = { id: socket.client.id };
+		var ship = clients[data.id];
+		socket.broadcast.emit('laser', data);
 	});
 });
 
