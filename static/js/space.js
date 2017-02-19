@@ -90,7 +90,7 @@ function keyDown(event) {
 	if (event.keyCode == 87)
 		player.vel.x = Math.min(2, player.vel.x + 0.02);
 	if (event.keyCode == 83)
-		player.vel.x = Math.max(0, player.vel.x - 0.02);
+		player.vel.x = Math.max(0.02, player.vel.x - 0.02);
 }
 
 var fire = function(position, rotation) {
