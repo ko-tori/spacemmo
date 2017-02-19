@@ -16,8 +16,8 @@ var dx = 0;
 var dy = 0;
 
 function updatePosition(e) {
-	dx = e.movementX / 500;
-	dy = e.movementY / 500;
+	dx = e.movementX / 200;
+	dy = e.movementY / 200;
 }
 
 var canvas = document.querySelector('canvas');
@@ -80,9 +80,13 @@ var update = function() {
 			ships[id].update();
 		}
 	}
-	lasers.forEach((laser) => {
-		laser.update();
-	});
+	for(var i = 0; i < lasers.length;i++){
+		if(lasers[i].update()){
+			delete lasers[i];
+		}
+	}
+	lasers = lasers.filter((i) => {return i;})
+
 	player.model.rotateY(-dx);
 	player.model.rotateZ(-dy);
 	dx = dy = 0;
@@ -95,6 +99,16 @@ var update = function() {
 function keyDown(event) {
 	if (event.keyCode == 32) {
 		fire(player.model.position, player.model.rotation);
+	}
+	if (event.keyCode == 87) {
+		if(player.vel.x<2){
+			player.vel.x+=.02;
+		}
+	}
+	if (event.keyCode == 83) {
+		if(player.vel.x>0.02){
+			player.vel.x-=.02;
+		}
 	}
 }
 

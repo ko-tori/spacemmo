@@ -9,7 +9,7 @@ class Ship {
 			console.error("Ship geometry and texture not loaded.");
 			return;
 		}
-		var ship = new THREE.Mesh(Ship.geometry, new THREE.MultiMaterial(Ship.materials));
+		var ship = new THREE.Mesh(Ship.geometry, new THREE.MeshPhongMaterial());
 		this.model.castShadow = true;
 		this.model.position.x = position.x;
 		this.model.position.y = position.y;
