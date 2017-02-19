@@ -69,23 +69,32 @@ var update = function() {
 			ships[id].update();
 		}
 	}
-	lasers.forEach((laser) => {
-		laser.update();
-	});
+	for(var i = 0; i < lasers.length;i++){
+		if(lasers[i].update()){
+			delete lasers[i];
+		}
+	}
+	lasers = lasers.filter((i) => {return i;})
+
 	player.model.rotateY(-dx);
 	player.model.rotateZ(-dy);
 	dx = dy = 0;
-	// if (updateCounter > 10) {
-	// 	sendPositionUpdate();
-	// 	updateCounter = 0;
-	// }
-	// updateCounter++;
 	sendPositionUpdate();
 };
 
 function keyDown(event) {
 	if (event.keyCode == 32) {
 		fire(player.model.position, player.model.rotation);
+	}
+	if (event.keyCode == 87) {
+		if(player.vel.x<2){
+			player.vel.x+=.02;
+		}
+	}
+	if (event.keyCode == 83) {
+		if(player.vel.x>0.02){
+			player.vel.x-=.02;
+		}
 	}
 }
 
