@@ -15,8 +15,9 @@ class Ship {
 		this.model.position.x = position.x;
 		this.model.position.y = position.y;
 		this.model.position.z = position.z;
+		this.model.name = socket.id;
 
-		var scale = 0.25;
+		var scale = 0.025;
 		ship.scale.set(scale, scale, scale);
 
 		this.model.add(ship);
