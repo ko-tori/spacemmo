@@ -37,8 +37,8 @@ room.on("connection", function(socket) {
 	socket.on('move', function(data) {
 		data.id = socket.client.id;
 		var ship = clients[data.id];
-		[ship.pos.x, ship.pos.y, ship.pos.z] = data.pos;
-		[ship.rot.x, ship.rot.y, ship.rot.z] = data.rot;
+		ship.pos = data.pos;
+		ship.rot = data.rot;
 		socket.broadcast.emit('move', data);
 	});
 });
