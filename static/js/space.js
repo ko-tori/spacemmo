@@ -4,8 +4,6 @@ var camera;
 var skyboxCamera;
 var skybox;
 
-
-
 var renderer = new THREE.WebGLRenderer({alpha: true});
 renderer.autoClear = false;
 renderer.setSize(window.innerWidth, window.innerHeight);
@@ -79,6 +77,8 @@ scene.add( cube );
 var player;
 var ships = [];
 var lasers = [];
+var lastfiretime = 0;
+var time;
 var newShip = function(pos, vel, rot, avel) {
 	var ship = new Ship(pos, vel, rot, avel);
 	ships.push(ship);
@@ -102,14 +102,20 @@ function keyDown(event){
 	} 
 }
 var fire = function(position, rotation){
-	var laserBurst = new LaserBurst(position, rotation);
-	lasers.push(laserBurst);
-	return laserBurst;
+	if(time>lastfiretime + 250)
+	{
+		var laserBurst = new LaserBurst(position, rotation);
+		lasers.push(laserBurst);
+		lastfiretime = time;
+		return laserBurst;
+	}
+	return;
 };
 
 var render = function() {
 	update();
 	requestAnimationFrame(render);
+	time = new Date().getTime();
 
 	var r = camera.getWorldRotation();
 	skyboxCamera.rotation.x = r.x;
