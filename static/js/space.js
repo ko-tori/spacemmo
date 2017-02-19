@@ -168,7 +168,7 @@ var init = function(startpos, startrot) {
 	player = new Ship(startpos, new Vector3(1, 0, 0), startrot, new Vector3(0, 0, 0));
 	player.addCamera(camera);
 	ships[socket.id] = player;
-
+	THREEx.WindowResize(renderer, camera);
 	render();
 }
 
