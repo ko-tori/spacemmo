@@ -169,7 +169,6 @@ var sendVelocityUpdate = function() {
 };
 
 var sendLaser = function() {
-	console.log('allahu1')
 	socket.emit('laser', 0);
 };
 
@@ -209,7 +208,6 @@ loader.load("assets/ship.json", function(geometry, materials) {
 		});
 
 		socket.on('laser', function(data) {
-			console.log('allahu');
 			fire(ships[data.id].model.position, ships[data.id].model.rotation);
 		});
 	});
