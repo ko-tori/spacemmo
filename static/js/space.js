@@ -48,7 +48,7 @@ spotLight.shadow.mapSize.width = 1024;
 spotLight.shadow.mapSize.height = 1024;
 
 spotLight.shadow.camera.near = 500;
-spotLight.shadow.camera.far = 4000;
+spotLight.shadow.camera.far = 10000;
 spotLight.shadow.camera.fov = 30;
 
 scene.add(spotLight);
@@ -65,7 +65,7 @@ for ( var i = 0; i < geometry.faces.length; i ++ ) {
     geometry.faces[ i ].color.setHex( Math.random() * 0xffffff );
 }
 
-var material = new THREE.MeshBasicMaterial( { color: 0xffffff, vertexColors: THREE.FaceColors } );
+var material = new THREE.MeshLambertMaterial( { color: 0xffffff, vertexColors: THREE.FaceColors } );
 var cube = new THREE.Mesh( geometry, material );
 scene.add( cube );
 
@@ -100,7 +100,7 @@ var init = function() {
 	camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
 	camera.position.set(-150, 40, 0);
 	camera.rotation.set(0, -Math.PI / 2, 0);
-	player = newShip(new Vector3(0, 0, 0), new Vector3(10, 0, 0), new Vector3(0, 0, 0), new Vector3(0, 0, 0));
+	player = newShip(new Vector3(-1000, 0, 0), new Vector3(10, 0, 0), new Vector3(0, 0, 0), new Vector3(0, 0, 0));
 	player.addCamera(camera);
 	render();
 }

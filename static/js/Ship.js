@@ -11,9 +11,10 @@ class Ship {
 			return;
 		}
 		var ship = new THREE.Mesh(Ship.geometry, new THREE.MultiMaterial(Ship.materials));
-		ship.position.x = position.x;
-		ship.position.y = position.y;
-		ship.position.z = position.z;
+		this.model.castShadow = true;
+		this.model.position.x = position.x;
+		this.model.position.y = position.y;
+		this.model.position.z = position.z;
 
 		var scale = 0.25;
 		ship.scale.set(scale, scale, scale);
