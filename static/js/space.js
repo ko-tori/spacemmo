@@ -29,6 +29,7 @@ canvas.onclick = function() {
 };
 document.addEventListener('mozpointerlockchange', lockChangeAlert, false);
 document.addEventListener('pointerlockchange', lockChangeAlert, false);
+document.addEventListener('keydown', keyDown, false);
 
 function lockChangeAlert() {
 	if (document.pointerLockElement === canvas ||
@@ -59,19 +60,32 @@ scene.add(spotLight);
 
 var loader = new THREE.JSONLoader();
 var player;
+<<<<<<< HEAD
 var ships = {};
+var lasers = [];
 
 var update = function() {
-	for (var id in ships) {
-		if (ships.hasOwnProperty(id)) {
-			ships[id].update();
-		}
-	}
+	ships.forEach((ship) => {
+		ship.update();
+	});
+	lasers.forEach((laser) => {
+		laser.update();
+	});
 	player.model.rotateY(-dx);
 	player.model.rotateZ(-dy);
 	dx = dy = 0;
 	sendPositionUpdate();
+};
+function keyDown(event){
+	if(event.keyCode == 32){
+		fire(player.model.position,player.model.rotation);
+	} 
 }
+var fire = function(position, rotation){
+	var laserBurst = new LaserBurst(position, rotation);
+	lasers.push(laserBurst);
+	return laserBurst;
+};
 
 var render = function() {
 	update();
