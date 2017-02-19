@@ -86,6 +86,7 @@ var update = function() {
 function keyDown(event) {
 	if (event.keyCode == 32) {
 		fire(player.model.position, player.model.rotation);
+		sendLaser();
 	}
 	if (event.keyCode == 87) {
 		player.vel.x = Math.min(2, player.vel.x + 0.02);
@@ -167,6 +168,11 @@ var sendVelocityUpdate = function() {
 	socket.emit('velchange', { vel: player.vel.toArray()});
 };
 
+var sendLaser = function() {
+	console.log('allahu1')
+	socket.emit('laser', 0);
+};
+
 var socket;
 
 loader.load("assets/ship.json", function(geometry, materials) {
@@ -179,7 +185,7 @@ loader.load("assets/ship.json", function(geometry, materials) {
 			init(new Vector3(x, y, z));
 		});
 		socket.on('join', function(data) {
-			console.log(data);
+			console.log(data.id + " joined");
 			var ship = new Ship(new Vector3(...data.ship.pos), new Vector3(...data.ship.vel), new Vector3(...data.ship.rot), new Vector3(0, 0, 0));
 			ships[data.id] = ship;
 		});
@@ -200,6 +206,11 @@ loader.load("assets/ship.json", function(geometry, materials) {
 			var ship = ships[data.id];
 			if (!ship) return;
 			ship.vel = data.vel;
+		});
+
+		socket.on('laser', function(data) {
+			console.log('allahu');
+			fire(ships[data.id].model.position, ships[data.id].model.rotation);
 		});
 	});
 });

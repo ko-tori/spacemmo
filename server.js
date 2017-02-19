@@ -50,6 +50,12 @@ room.on("connection", function(socket) {
 		ship.vel = data.vel;
 		socket.broadcast.emit('velchange', data);
 	});
+
+	socket.on('laser', function(data) {
+		data = { id: socket.client.id };
+		var ship = clients[data.id];
+		socket.broadcast.emit('laser', data);
+	});
 });
 
 var port = process.env.PORT || 3000;
