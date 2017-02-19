@@ -4,6 +4,8 @@ var camera;
 var skyboxCamera;
 var skybox;
 
+var updateCounter = 0;
+
 var renderer = new THREE.WebGLRenderer({ alpha: true });
 renderer.autoClear = false;
 renderer.setSize(window.innerWidth, window.innerHeight);
@@ -60,28 +62,34 @@ scene.add(spotLight);
 
 var loader = new THREE.JSONLoader();
 var player;
-<<<<<<< HEAD
+
 var ships = {};
 var lasers = [];
 
 var update = function() {
-	ships.forEach((ship) => {
-		ship.update();
-	});
+	for (var id in ships) {
+		if (ships.hasOwnProperty(id)) {
+			ships[id].update();
+		}
+	}
 	lasers.forEach((laser) => {
 		laser.update();
 	});
 	player.model.rotateY(-dx);
 	player.model.rotateZ(-dy);
 	dx = dy = 0;
-	sendPositionUpdate();
+	if (updateCounter > 10) {
+		sendPositionUpdate();
+		updateCounter = 0;
+	}
 };
-function keyDown(event){
-	if(event.keyCode == 32){
-		fire(player.model.position,player.model.rotation);
-	} 
+
+function keyDown(event) {
+	if (event.keyCode == 32) {
+		fire(player.model.position, player.model.rotation);
+	}
 }
-var fire = function(position, rotation){
+var fire = function(position, rotation) {
 	var laserBurst = new LaserBurst(position, rotation);
 	lasers.push(laserBurst);
 	return laserBurst;
@@ -103,8 +111,8 @@ var render = function() {
 };
 
 var init = function(startpos, startrot) {
-	startpos = startpos || new Vector3(-100,0,0);
-	startrot = startrot || new Vector3(0,0,0);
+	startpos = startpos || new Vector3(-100, 0, 0);
+	startrot = startrot || new Vector3(0, 0, 0);
 	camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 10000);
 
 	skyboxCamera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 10000);
@@ -139,31 +147,36 @@ var sendPositionUpdate = function() {
 	socket.emit('move', { pos: player.model.position.toArray(), rot: player.model.rotation.toArray().slice(0, 3) });
 };
 
-var socket = io.connect('/');
-socket.on('connect', function() {
-	socket.on('init', function(data) {
-		var [x, y, z] = data.pos;
-		loader.load("assets/ship.json", function(geometry, materials) {
-			Ship.geometry = geometry;
-			Ship.materials = materials;
+var socket;
+
+loader.load("assets/ship.json", function(geometry, materials) {
+	Ship.geometry = geometry;
+	Ship.materials = materials;
+	socket = io.connect('/');
+	socket.on('connect', function() {
+		socket.on('init', function(data) {
+			var [x, y, z] = data.pos;
 			init(new Vector3(x, y, z));
 		});
-	});
-	socket.on('join', function(data) {
-		var [x, y, z] = data.pos;
-		var [a, b, c] = data.rot;
-		var ship = new Ship(new Vector3(x, y, z), new Vector3(1, 0, 0), new Vector3(a, b, c), new Vector3(0, 0, 0));
-	});
+		socket.on('join', function(data) {
+			console.log(data.id + "joined");
+			var [x, y, z] = data.pos;
+			var [a, b, c] = data.rot;
+			var ship = new Ship(new Vector3(x, y, z), new Vector3(1, 0, 0), new Vector3(a, b, c), new Vector3(0, 0, 0));
+			ships[data.id] = ship;
+		});
 
-	socket.on('leave', function(data) {
-		scene.remove(ships[data.id].model);
-		delete ships[data.id];
-	});
+		socket.on('leave', function(data) {
+			console.log(data.id + "left");
+			scene.remove(ships[data.id].model);
+			delete ships[data.id];
+		});
 
-	socket.on('move', function(data) {
-		var ship = ships[data.id];
-		if (!ship) return;
-		[ship.position.x, ship.position.y, ship.position.z] = data.pos;
-		[ship.rotation.x, ship.rotation.y, ship.rotation.z] = data.rot;
+		socket.on('move', function(data) {
+			var ship = ships[data.id];
+			if (!ship) return;
+			[ship.position.x, ship.position.y, ship.position.z] = data.pos;
+			[ship.rotation.x, ship.rotation.y, ship.rotation.z] = data.rot;
+		});
 	});
 });

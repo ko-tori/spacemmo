@@ -2,7 +2,6 @@ var Vector3 = THREE.Vector3;
 
 class Ship {
 	constructor(position, velocity, rotation, angvel) {
-		console.log(position, velocity, rotation, angvel);
 		this.vel = velocity;
 		this.avel = angvel;
 		this.model = new THREE.Object3D();
