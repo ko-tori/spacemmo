@@ -16,8 +16,8 @@ var dx = 0;
 var dy = 0;
 
 function updatePosition(e) {
-	dx = e.movementX / 500;
-	dy = e.movementY / 500;
+	dx = e.movementX / 100;
+	dy = e.movementY / 100;
 }
 
 var canvas = document.querySelector('canvas');
@@ -47,19 +47,8 @@ function lockChangeAlert() {
 
 var ambient = new THREE.AmbientLight(0x555555);
 scene.add(ambient);
-var spotLight = new THREE.SpotLight(0xffffff);
-spotLight.position.set(10, 100, 10);
-
-spotLight.castShadow = true;
-
-spotLight.shadow.mapSize.width = 1024;
-spotLight.shadow.mapSize.height = 1024;
-
-spotLight.shadow.camera.near = 500;
-spotLight.shadow.camera.far = 10000;
-spotLight.shadow.camera.fov = 30;
-
-scene.add(spotLight);
+var light = new THREE.DirectionalLight(0xffffff);
+scene.add(light);
 
 var loader = new THREE.JSONLoader();
 var player;
@@ -86,10 +75,12 @@ var update = function() {
 	player.model.rotateY(-dx);
 	player.model.rotateZ(-dy);
 	dx = dy = 0;
-	if (updateCounter > 10) {
-		sendPositionUpdate();
-		updateCounter = 0;
-	}
+	// if (updateCounter > 10) {
+	// 	sendPositionUpdate();
+	// 	updateCounter = 0;
+	// }
+	// updateCounter++;
+	sendPositionUpdate();
 };
 
 function keyDown(event) {
@@ -136,7 +127,7 @@ var init = function(startpos, startrot) {
 		map: THREE.ImageUtils.loadTexture("img/skybox.png"),
 		side: THREE.BackSide
 	}));
-	var skyMaterial = new THREE.MeshFaceMaterial(materials);
+	var skyMaterial = new THREE.MultiMaterial(materials);
 	var skyBox = new THREE.Mesh(skyGeometry, skyMaterial);
 	skyboxScene.add(skyBox);
 
@@ -145,8 +136,11 @@ var init = function(startpos, startrot) {
 		geometry.faces[i].color.setHex(Math.random() * 0xffffff);
 	}
 
-	var material = new THREE.MeshLambertMaterial({ color: 0xffffff, vertexColors: THREE.FaceColors });
+	var material = new THREE.MeshPhongMaterial({ color: 0xffffff, vertexColors: THREE.FaceColors });
 	var cube = new THREE.Mesh(geometry, material);
+	cube.rotation.x = Math.PI / 4;
+	cube.rotation.y = Math.PI / 4;
+	cube.rotation.z = Math.PI / 4;
 	scene.add(cube);
 
 	camera.position.set(-15, 4, 0);
@@ -166,7 +160,7 @@ var socket;
 
 loader.load("assets/ship.json", function(geometry, materials) {
 	Ship.geometry = geometry;
-	Ship.materials = materials;
+	Ship.materials = new THREE.MeshStandardMaterial();//new THREE.MultiMaterial(materials);
 	socket = io.connect('/');
 	socket.on('connect', function() {
 		socket.on('init', function(data) {
@@ -174,7 +168,7 @@ loader.load("assets/ship.json", function(geometry, materials) {
 			init(new Vector3(x, y, z));
 		});
 		socket.on('join', function(data) {
-			console.log(data.id + "joined");
+			console.log("Joined: ", data.pos);
 			var [x, y, z] = data.pos;
 			var [a, b, c] = data.rot;
 			var ship = new Ship(new Vector3(x, y, z), new Vector3(1, 0, 0), new Vector3(a, b, c), new Vector3(0, 0, 0));
@@ -188,10 +182,11 @@ loader.load("assets/ship.json", function(geometry, materials) {
 		});
 
 		socket.on('move', function(data) {
+			console.log(data);
 			var ship = ships[data.id];
 			if (!ship) return;
-			[ship.position.x, ship.position.y, ship.position.z] = data.pos;
-			[ship.rotation.x, ship.rotation.y, ship.rotation.z] = data.rot;
+			[ship.model.position.x, ship.model.position.y, ship.model.position.z] = data.pos;
+			[ship.model.rotation.x, ship.model.rotation.y, ship.model.rotation.z] = data.rot;
 		});
 	});
 });
