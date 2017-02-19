@@ -31,6 +31,7 @@ canvas.onclick = function() {
 };
 document.addEventListener('mozpointerlockchange', lockChangeAlert, false);
 document.addEventListener('pointerlockchange', lockChangeAlert, false);
+document.addEventListener('keydown', keyDown, false);
 
 function lockChangeAlert() {
 	if (document.pointerLockElement === canvas ||
@@ -77,24 +78,34 @@ scene.add( cube );
 
 var player;
 var ships = [];
-
+var lasers = [];
 var newShip = function(pos, vel, rot, avel) {
 	var ship = new Ship(pos, vel, rot, avel);
 	ships.push(ship);
 	return ship;
-}
+};
 
 var update = function() {
 	ships.forEach((ship) => {
 		ship.update();
 	});
+	lasers.forEach((laser) => {
+		laser.update();
+	});
 	player.model.rotateY(-dx);
 	player.model.rotateZ(-dy);
 	dx = dy = 0;
+};
+function keyDown(event){
+	if(event.keyCode == 32){
+		fire(player.model.position,player.model.rotation);
+	} 
 }
-
-
-
+var fire = function(position, rotation){
+	var laserBurst = new LaserBurst(position, rotation);
+	lasers.push(laserBurst);
+	return laserBurst;
+};
 
 var render = function() {
 	update();
