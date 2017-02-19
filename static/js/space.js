@@ -69,12 +69,13 @@ var update = function() {
 			ships[id].update();
 		}
 	}
-	for(var i = 0; i < lasers.length;i++){
-		if(lasers[i].update()){
+	for (var i = 0; i < lasers.length; i++) {
+		if (lasers[i].update()) {
 			delete lasers[i];
 		}
 	}
-	lasers = lasers.filter((i) => {return i;})
+	lasers = lasers.filter((i) => {
+		return i; })
 
 	player.model.rotateY(-dx);
 	player.model.rotateZ(-dy);
@@ -86,21 +87,14 @@ function keyDown(event) {
 	if (event.keyCode == 32) {
 		fire(player.model.position, player.model.rotation);
 	}
-	if (event.keyCode == 87) {
-		if(player.vel.x<2){
-			player.vel.x+=.02;
-		}
-	}
-	if (event.keyCode == 83) {
-		if(player.vel.x>0.02){
-			player.vel.x-=.02;
-		}
-	}
+	if (event.keyCode == 87)
+		player.vel.x = Math.min(2, player.vel.x + 0.02);
+	if (event.keyCode == 83)
+		player.vel.x = Math.max(0, player.vel.x - 0.02);
 }
 
-var fire = function(position, rotation){
-	if(time>lastfiretime + 250)
-	{
+var fire = function(position, rotation) {
+	if (time > lastfiretime + 250) {
 		var laserBurst = new LaserBurst(position, rotation);
 		lasers.push(laserBurst);
 		lastfiretime = time;
@@ -169,7 +163,7 @@ var socket;
 
 loader.load("assets/ship.json", function(geometry, materials) {
 	Ship.geometry = geometry;
-	Ship.materials = new THREE.MeshStandardMaterial();//new THREE.MultiMaterial(materials);
+	Ship.materials = new THREE.MeshStandardMaterial(); //new THREE.MultiMaterial(materials);
 	socket = io.connect('/');
 	socket.on('connect', function() {
 		socket.on('init', function(data) {
