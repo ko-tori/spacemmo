@@ -12,8 +12,8 @@ renderer.autoClear = false;
 renderer.setSize(window.innerWidth, window.innerHeight);
 document.body.appendChild(renderer.domElement);
 
-var targetdx=0;
-var targetdy=0;
+var targetdx = 0;
+var targetdy = 0;
 
 var dx = 0;
 var dy = 0;
@@ -22,6 +22,49 @@ function updatePosition(e) {
 	dx = e.movementX / 500;
 	dy = e.movementY / 500;
 }
+
+var touch = false;
+
+function copyTouch(touch) {
+	return { identifier: touch.identifier, pageX: touch.pageX, pageY: touch.pageY };
+}
+
+document.addEventListener('touchstart', function(e) {
+	if (!touch) {
+		touch = copyTouch(e.changedTouches[0]);
+		touch.moved = false;
+	}
+}, false);
+
+document.addEventListener('touchmove', function(e) {
+	e.preventDefault();
+	var touches = e.changedTouches;
+	for (var i = 0; i < touches.length; i++) {
+		var t = touches.item(i);
+		if (t.identifier == touch.identifier) {
+			dx = (t.pageX - touch.pageX) / 1000;
+			dy = (t.pageY - touch.pageY) / 1000;
+			touch = copyTouch(t);
+			touch.moved = true;
+			break;
+		}
+	}
+}, false);
+
+document.addEventListener('touchend', function(e) {
+	var touches = e.changedTouches;
+	for (var i = 0; i < touches.length; i++) {
+		var t = touches.item(i);
+		if (t.identifier == touch.identifier) {
+			if (!touch.moved && t.pageX == touch.pageX && t.pageY == touch.pageY) {
+				fire(player.model.position, player.model.rotation);
+				sendLaser();
+			}
+			touch = false;
+			break;
+		}
+	}
+}, false);
 
 var canvas = document.querySelector('canvas');
 canvas.requestPointerLock = canvas.requestPointerLock ||
@@ -80,15 +123,16 @@ var update = function() {
 		}
 	}
 	lasers = lasers.filter((i) => {
-		return i; })
+		return i;
+	})
 
 	targetdx += dx;
 	targetdy += dy;
 
-	player.model.rotateY(-targetdx/1.2);
-	player.model.rotateZ(-targetdy/1.2);
-	targetdx/=1.2;
-	targetdy/=1.2;
+	player.model.rotateY(-targetdx / 1.2);
+	player.model.rotateZ(-targetdy / 1.2);
+	targetdx /= 1.2;
+	targetdy /= 1.2;
 	dx = dy = 0;
 	sendPositionUpdate();
 };
@@ -123,7 +167,7 @@ var render = function() {
 
 	oldtime = time;
 	time = new Date().getTime();
-	dt = time-oldtime;
+	dt = time - oldtime;
 	var r = camera.getWorldRotation();
 	skyboxCamera.rotation.x = r.x;
 	skyboxCamera.rotation.y = r.y;
@@ -177,7 +221,7 @@ var sendPositionUpdate = function() {
 };
 
 var sendVelocityUpdate = function() {
-	socket.emit('velchange', { vel: player.vel.toArray()});
+	socket.emit('velchange', { vel: player.vel.toArray() });
 };
 
 var sendLaser = function() {

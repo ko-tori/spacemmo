@@ -1,6 +1,9 @@
 body {
 	margin: 0;
-	overflow: hidden;
+	height: 100%;
+    overflow: hidden;
+    width: 100%;
+    position: fixed;
 }
 
 canvas {

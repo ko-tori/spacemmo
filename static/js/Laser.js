@@ -12,19 +12,19 @@ class LaserBurst {
 
 		this.expire = 0;
 
-		var laser1 = new THREE.Mesh(new THREE.CubeGeometry(100, 0.4, 0.4), new THREE.MeshBasicMaterial({ color: 0xff0000, opacity: 1 }));
+		var laser1 = new THREE.Mesh(LaserBurst.geometry, LaserBurst.material);
 		laser1.translateX(54.5);
 		laser1.translateY(0.7);
 		laser1.translateZ(4.7);
-		var laser2 = new THREE.Mesh(new THREE.CubeGeometry(100, 0.4, 0.4), new THREE.MeshBasicMaterial({ color: 0xff0000, opacity: 1 }));
+		var laser2 = new THREE.Mesh(LaserBurst.geometry, LaserBurst.material);
 		laser2.translateX(54.5);
 		laser2.translateY(0.7);
 		laser2.translateZ(-4.7);
-		var laser3 = new THREE.Mesh(new THREE.CubeGeometry(100, 0.4, 0.4), new THREE.MeshBasicMaterial({ color: 0xff0000, opacity: 1 }));
+		var laser3 = new THREE.Mesh(LaserBurst.geometry, LaserBurst.material);
 		laser3.translateX(54.5);
 		laser3.translateY(-1.5);
 		laser3.translateZ(4.7);
-		var laser4 = new THREE.Mesh(new THREE.CubeGeometry(100, 0.4, 0.4), new THREE.MeshBasicMaterial({ color: 0xff0000, opacity: 1 }));
+		var laser4 = new THREE.Mesh(LaserBurst.geometry, LaserBurst.material);
 		laser4.translateX(54.5);
 		laser4.translateY(-1.5);
 		laser4.translateZ(-4.7);
@@ -46,3 +46,6 @@ class LaserBurst {
 		return false;
 	}
 }
+
+LaserBurst.geometry = new THREE.CubeGeometry(100, 0.4, 0.4);
+LaserBurst.material = new THREE.MeshBasicMaterial({ color: 0xff0000, opacity: 1 });

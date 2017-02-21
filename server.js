@@ -12,7 +12,7 @@ app.get("/", function(req, res) {
 var room = io.of('/');
 
 var pickSpawn = function() {
-	return [-100, 0, 0];
+	return [-500, 0, 0];
 }
 
 var clients = {};
