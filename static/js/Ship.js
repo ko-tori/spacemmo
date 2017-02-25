@@ -14,6 +14,9 @@ class Ship {
 		this.model.position.x = position.x;
 		this.model.position.y = position.y;
 		this.model.position.z = position.z;
+		this.model.rotation.x = rotation.x;
+		this.model.rotation.y = rotation.y;
+		this.model.rotation.z = rotation.z;
 		this.model.name = socket.id;
 
 		var scale = 0.0025;

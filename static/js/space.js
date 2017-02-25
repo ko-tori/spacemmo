@@ -4,12 +4,19 @@ var camera;
 var skyboxCamera;
 var skybox;
 
+var keys = Array(256).fill(false);
+
+var AXES = false;
+var CUBE = true;
+var morecubes = true;
+
 var updateCounter = 0;
 
 var renderer = new THREE.WebGLRenderer({ alpha: true });
 
 renderer.autoClear = false;
 renderer.setSize(window.innerWidth, window.innerHeight);
+renderer.domElement.id = 'canvas3';
 document.body.appendChild(renderer.domElement);
 
 var targetdx = 0;
@@ -23,6 +30,21 @@ function updatePosition(e) {
 	dy = e.movementY / 500;
 }
 
+function checkKeys() {
+	if (keys[32]) {
+		fire(player.model.position, player.model.rotation);
+		sendLaser();
+	}
+	if (keys[87]) {
+		player.vel.x = Math.min(2.5, player.vel.x + 0.02);
+		sendVelocityUpdate();
+	}
+	if (keys[83]) {
+		player.vel.x = Math.max(0, player.vel.x - 0.02);
+		sendVelocityUpdate();
+	}
+}
+
 var touch = false;
 
 function copyTouch(touch) {
@@ -30,6 +52,7 @@ function copyTouch(touch) {
 }
 
 document.addEventListener('touchstart', function(e) {
+	e.preventDefault();
 	if (!touch) {
 		touch = copyTouch(e.changedTouches[0]);
 		touch.moved = false;
@@ -66,7 +89,7 @@ document.addEventListener('touchend', function(e) {
 	}
 }, false);
 
-var canvas = document.querySelector('canvas');
+var canvas = renderer.domElement;
 canvas.requestPointerLock = canvas.requestPointerLock ||
 	canvas.mozRequestPointerLock;
 
@@ -79,14 +102,13 @@ canvas.onclick = function() {
 document.addEventListener('mozpointerlockchange', lockChangeAlert, false);
 document.addEventListener('pointerlockchange', lockChangeAlert, false);
 document.addEventListener('keydown', keyDown, false);
+document.addEventListener('keyup', keyUp, false);
 
 function lockChangeAlert() {
 	if (document.pointerLockElement === canvas ||
 		document.mozPointerLockElement === canvas) {
-		console.log('The pointer lock status is now locked');
 		document.addEventListener("mousemove", updatePosition, false);
 	} else {
-		console.log('The pointer lock status is now unlocked');
 		document.removeEventListener("mousemove", updatePosition, false);
 	}
 }
@@ -135,21 +157,15 @@ var update = function() {
 	targetdy /= 1.2;
 	dx = dy = 0;
 	sendPositionUpdate();
+	checkKeys();
 };
 
 function keyDown(event) {
-	if (event.keyCode == 32) {
-		fire(player.model.position, player.model.rotation);
-		sendLaser();
-	}
-	if (event.keyCode == 87) {
-		player.vel.x = Math.min(2, player.vel.x + 0.02);
-		sendVelocityUpdate();
-	}
-	if (event.keyCode == 83) {
-		player.vel.x = Math.max(0.02, player.vel.x - 0.02);
-		sendVelocityUpdate();
-	}
+	keys[event.keyCode] = true;
+}
+
+function keyUp(event) {
+	keys[event.keyCode] = false;
 }
 
 var fire = function(position, rotation) {
@@ -160,6 +176,17 @@ var fire = function(position, rotation) {
 		return laserBurst;
 	}
 	return;
+};
+
+var drawUI = function() {
+	var ctx = document.getElementById('ui').getContext('2d');
+	ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+	ctx.fillStyle = '#FFF';
+	ctx.font = '15px sans-serif';
+	ctx.fillText(`Speed: ${(player.vel.x * 60).toFixed(2)}`, 5, 25);
+	ctx.fillText(`x: ${(player.model.position.x).toFixed(2)}`, 5, 45);
+	ctx.fillText(`y: ${(player.model.position.y).toFixed(2)}`, 5, 65);
+	ctx.fillText(`z: ${(player.model.position.z).toFixed(2)}`, 5, 85);
 };
 
 var render = function() {
@@ -177,11 +204,14 @@ var render = function() {
 	renderer.render(skyboxScene, skyboxCamera);
 	renderer.clearDepth();
 	renderer.render(scene, camera);
+	drawUI();
 	update();
 };
 
-var init = function(startpos, startrot) {
-	startpos = startpos || new Vector3(-100, 0, 0);
+var init = function(startpos, startvel, startrot) {
+	console.log(startpos, startvel, startrot);
+	startpos = startpos || new Vector3(-1000, 0, 0);
+	startvel = startvel || new Vector3(1, 0, 0);
 	startrot = startrot || new Vector3(0, 0, 0);
 	camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 10000);
 
@@ -195,26 +225,60 @@ var init = function(startpos, startrot) {
 	var skyBox = new THREE.Mesh(skyGeometry, skyMaterial);
 	skyboxScene.add(skyBox);
 
-	var geometry = new THREE.BoxGeometry(20, 20, 20);
+	var geometry = new THREE.BoxGeometry(200, 200, 200);
 	for (var i = 0; i < geometry.faces.length; i++) {
 		geometry.faces[i].color.setHex(Math.random() * 0xffffff);
 	}
 
-	var material = new THREE.MeshPhongMaterial({ color: 0xffffff, vertexColors: THREE.FaceColors });
-	var cube = new THREE.Mesh(geometry, material);
-	cube.rotation.x = Math.PI / 4;
-	cube.rotation.y = Math.PI / 4;
-	cube.rotation.z = Math.PI / 4;
-	scene.add(cube);
+	if (CUBE) {
+		var material = new THREE.MeshPhongMaterial({ color: 0xffffff, vertexColors: THREE.FaceColors });
+		var cube = new THREE.Mesh(geometry, material);
+		scene.add(cube);
+		if (morecubes) {
+			var cube2 = cube.clone();
+			var cube3 = cube.clone();
+			var cube4 = cube.clone();
+			var cube5 = cube.clone();
+			var cube6 = cube.clone();
+			var cube7 = cube.clone();
+			cube2.position.x = 1500;
+			scene.add(cube2);
+			cube3.position.x = -1500;
+			scene.add(cube3);
+			cube4.position.y = 1500;
+			scene.add(cube4);
+			cube5.position.y = -1500;
+			scene.add(cube5);
+			cube6.position.z = 1500;
+			scene.add(cube6);
+			cube7.position.z = -1500;
+			scene.add(cube7);
+		}
+		cube.rotation.x = Math.PI / 4;
+		cube.rotation.y = Math.PI / 4;
+		cube.rotation.z = Math.PI / 4;
+	}
+
+	if (AXES) {
+		var axisHelper = new THREE.AxisHelper( 20000 );
+		scene.add( axisHelper );
+	}
 
 	camera.position.set(-15, 4, 0);
 	camera.rotation.set(0, -Math.PI / 2, 0);
-	player = new Ship(startpos, new Vector3(1, 0, 0), startrot, new Vector3(0, 0, 0));
+	player = new Ship(startpos, startvel, startrot, new Vector3(0, 0, 0));
 	player.addCamera(camera);
 	ships[socket.id] = player;
 	THREEx.WindowResize(renderer, camera);
 	render();
-}
+};
+
+$(window).on("resize", function () {
+	$("#ui").attr("width", $(window).width())
+		.attr("height", $(window).height());
+});
+$("#ui").attr("width", $(window).width())
+		.attr("height", $(window).height());
 
 var sendPositionUpdate = function() {
 	socket.emit('move', { pos: player.model.position.toArray(), rot: player.model.rotation.toArray().slice(0, 3) });
@@ -232,12 +296,12 @@ var socket;
 
 loader.load("assets/ship.json", function(geometry, materials) {
 	Ship.geometry = geometry;
-	Ship.materials = new THREE.MeshStandardMaterial(); //new THREE.MultiMaterial(materials);
+	Ship.materials = new THREE.MeshStandardMaterial();
+	//Ship.materials = new THREE.MultiMaterial(materials); // very slow
 	socket = io.connect('/');
 	socket.on('connect', function() {
 		socket.on('init', function(data) {
-			var [x, y, z] = data.pos;
-			init(new Vector3(x, y, z));
+			init(new Vector3(...data.pos), new Vector3(...data.vel), new Vector3(...data.rot));
 		});
 		socket.on('join', function(data) {
 			console.log(data.id + " joined");
@@ -246,6 +310,7 @@ loader.load("assets/ship.json", function(geometry, materials) {
 		});
 
 		socket.on('leave', function(data) {
+			console.log(data + " left");
 			scene.remove(ships[data].model);
 			delete ships[data];
 		});

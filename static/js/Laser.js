@@ -13,18 +13,22 @@ class LaserBurst {
 		this.expire = 0;
 
 		var laser1 = new THREE.Mesh(LaserBurst.geometry, LaserBurst.material);
+		var laser2 = laser1.clone();
+		var laser3 = laser1.clone();
+		var laser4 = laser1.clone();
+		
 		laser1.translateX(54.5);
 		laser1.translateY(0.7);
 		laser1.translateZ(4.7);
-		var laser2 = new THREE.Mesh(LaserBurst.geometry, LaserBurst.material);
+
 		laser2.translateX(54.5);
 		laser2.translateY(0.7);
 		laser2.translateZ(-4.7);
-		var laser3 = new THREE.Mesh(LaserBurst.geometry, LaserBurst.material);
+
 		laser3.translateX(54.5);
 		laser3.translateY(-1.5);
 		laser3.translateZ(4.7);
-		var laser4 = new THREE.Mesh(LaserBurst.geometry, LaserBurst.material);
+
 		laser4.translateX(54.5);
 		laser4.translateY(-1.5);
 		laser4.translateZ(-4.7);
@@ -38,7 +42,7 @@ class LaserBurst {
 	}
 	update() {
 		this.model.translateX(50 * dt / 17);
-		this.expire += 1;
+		this.expire += dt / 17;
 		if (this.expire > 100) {
 			scene.remove(this.model);
 			return true;

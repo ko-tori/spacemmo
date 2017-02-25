@@ -9,29 +9,100 @@ app.get("/", function(req, res) {
 	res.sendFile(__dirname + "/static/index.html");
 });
 
+var applyEuler = function(v, e) {
+	return applyQuaternion(v, eulerToQuaternion(e));
+};
+
+var eulerToQuaternion = function(e) {
+	var c1 = Math.cos(e[0] / 2);
+	var c2 = Math.cos(e[1] / 2);
+	var c3 = Math.cos(e[2] / 2);
+	var s1 = Math.sin(e[0] / 2);
+	var s2 = Math.sin(e[1] / 2);
+	var s3 = Math.sin(e[2] / 2);
+
+	return [s1 * c2 * c3 + c1 * s2 * s3,
+		c1 * s2 * c3 - s1 * c2 * s3,
+		c1 * c2 * s3 + s1 * s2 * c3,
+		c1 * c2 * c3 - s1 * s2 * s3
+	];
+};
+
+var applyQuaternion = function(v, q) {
+	var [x, y, z] = v;
+	var [qx, qy, qz, qw] = q;
+
+	// calculate quat * vector
+	var ix = qw * x + qy * z - qz * y;
+	var iy = qw * y + qz * x - qx * z;
+	var iz = qw * z + qx * y - qy * x;
+	var iw = -qx * x - qy * y - qz * z;
+
+	// calculate result * inverse quat
+	return [ix * qw + iw * -qx + iy * -qz - iz * -qy,
+		iy * qw + iw * -qy + iz * -qx - ix * -qz,
+		iz * qw + iw * -qz + ix * -qy - iy * -qx
+	];
+};
+
+var addVectors = function(v1, v2) {
+	return [v1[0] + v2[0], v1[1] + v2[1], v1[2] + v2[2]];
+};
+
 var room = io.of('/');
 
 var pickSpawn = function() {
-	return [-500, 0, 0];
-}
+	var u = Math.random();
+	var v = Math.random();
+	var theta = 2 * Math.PI * u;
+	var phi = Math.acos(2 * v - 1);
+	var radius = 500;
+	var x = (radius * Math.sin(phi) * Math.cos(theta));
+	var y = (radius * Math.sin(phi) * Math.sin(theta));
+	var z = (radius * Math.cos(phi));
+	return [
+		[x, y, z],
+		[0, 0, 0]
+	];
+};
 
 var clients = {};
 var projectiles = [];
 var interval = false;
 
 function update() {
-
+	// for (var id in ships) {
+	// 	if (ships.hasOwnProperty(id)) {
+	// 		ships[id].update();
+	// 	}
+	// }
+	for (var i = 0; i < projectiles.length; i++) {
+		let laser = projectiles[i];
+		laser.life--;
+		laser.pos = addVectors(laser.pos, laser.vel);
+		//check for hits
+	}
+	projectiles = projectiles.filter((o) => {
+		return o.life >= 0;
+	});
 }
 
 room.on("connection", function(socket) {
-	var startpos = pickSpawn();
-	var startrot = [0, 0, 0];
+	console.log(socket.client.id + " joined");
+	var [startpos, startrot] = pickSpawn();
 	var startvel = [1, 0, 0];
-	var startobj = {pos: startpos, vel: startvel, rot: startrot};
-	socket.emit('init', { pos: startpos });
+	var startobj = {
+		pos: startpos,
+		vel: startvel,
+		rot: startrot,
+		kills: 0,
+		deaths: 0,
+		shots: 0
+	};
+	socket.emit('init', { pos: startpos, vel: startvel, rot: startrot});
 	for (var id in clients) {
 		if (clients.hasOwnProperty(id)) {
-			socket.emit('join', { id: id, ship: clients[id]});
+			socket.emit('join', { id: id, ship: clients[id] });
 		}
 	}
 	clients[socket.client.id] = startobj;
@@ -40,10 +111,13 @@ room.on("connection", function(socket) {
 		interval = setInterval(update, 17);
 
 	socket.on('disconnect', function(data) {
+		console.log(socket.client.id + " left");
 		delete clients[socket.client.id];
 		socket.broadcast.emit('leave', socket.client.id);
-		if (Object.keys(clients).length === 0)
+		if (Object.keys(clients).length === 0) {
 			clearInterval(interval);
+			interval = false;
+		}
 	});
 
 	socket.on('move', function(data) {
@@ -64,6 +138,8 @@ room.on("connection", function(socket) {
 	socket.on('laser', function(data) {
 		data = { id: socket.client.id };
 		var ship = clients[data.id];
+		ship.shots++;
+		projectiles.push({ pos: ship.pos.slice(), vel: applyEuler([50, 0, 0], ship.rot), source: data.id, life: 100 });
 		socket.broadcast.emit('laser', data);
 	});
 });
