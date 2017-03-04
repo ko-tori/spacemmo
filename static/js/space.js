@@ -43,7 +43,7 @@ function checkKeys() {
 		player.vel.x = Math.max(0, player.vel.x - 0.02);
 		sendVelocityUpdate();
 	}
-
+}
 
 var touch = false;
 
@@ -194,11 +194,7 @@ var render = function() {
 
 	oldtime = time;
 	time = new Date().getTime();
-<<<<<<< Updated upstream
 	dt = time - oldtime;
-=======
-	dt = time-oldtime;
->>>>>>> Stashed changes
 	var r = camera.getWorldRotation();
 	skyboxCamera.rotation.x = r.x;
 	skyboxCamera.rotation.y = r.y;
