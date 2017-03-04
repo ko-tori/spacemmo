@@ -1,3 +1,6 @@
+var laserSound = new Howl({
+  src: ['assets/blaster.ogg']
+});
 class LaserBurst {
 	constructor(position, rotation) {
 		this.model = new THREE.Group();
@@ -37,7 +40,8 @@ class LaserBurst {
 		this.model.add(laser2);
 		this.model.add(laser3);
 		this.model.add(laser4);
-
+		
+		laserSound.play();
 		scene.add(this.model);
 	}
 	update() {
