@@ -19,6 +19,12 @@ renderer.setSize(window.innerWidth, window.innerHeight);
 renderer.domElement.id = 'canvas3';
 document.body.appendChild(renderer.domElement);
 
+function segmentBoxCollision(s, b) {
+	var [p1, p2] = s;
+	var [b1, b2] = b;
+	
+}
+
 var targetdx = 0;
 var targetdy = 0;
 
@@ -260,8 +266,8 @@ var init = function(startpos, startvel, startrot) {
 	}
 
 	if (AXES) {
-		var axisHelper = new THREE.AxisHelper( 20000 );
-		scene.add( axisHelper );
+		var axisHelper = new THREE.AxisHelper(20000);
+		scene.add(axisHelper);
 	}
 
 	camera.position.set(-15, 4, 0);
@@ -273,12 +279,12 @@ var init = function(startpos, startvel, startrot) {
 	render();
 };
 
-$(window).on("resize", function () {
+$(window).on("resize", function() {
 	$("#ui").attr("width", $(window).width())
 		.attr("height", $(window).height());
 });
 $("#ui").attr("width", $(window).width())
-		.attr("height", $(window).height());
+	.attr("height", $(window).height());
 
 var sendPositionUpdate = function() {
 	socket.emit('move', { pos: player.model.position.toArray(), rot: player.model.rotation.toArray().slice(0, 3) });
