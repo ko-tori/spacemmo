@@ -19,12 +19,6 @@ renderer.setSize(window.innerWidth, window.innerHeight);
 renderer.domElement.id = 'canvas3';
 document.body.appendChild(renderer.domElement);
 
-function segmentBoxCollision(s, b) {
-	var [p1, p2] = s;
-	var [b1, b2] = b;
-	
-}
-
 var targetdx = 0;
 var targetdy = 0;
 
