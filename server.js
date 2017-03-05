@@ -105,10 +105,11 @@ function update() {
 				console.log(laserend);
 				console.log(ship.pos);
 				if(Math.min(laserstart[2],laserend[2])<ship.pos[2]+xyzbounds[2] && Math.max(laserstart[2],laserend[2])>ship.pos[2]+xyzbounds[2]){
-					let v = subVectors(laserend,laserstart);
-					console.log(123);
-					var thing = addVectors(multVector(subVectors(laserend,laserstart),(ship.pos[2]+xyzbounds[2]-laserstart[2])/(laserend[2]-laserstart[2])),laserstart);
-					console.log(thing);
+					var intersect = addVectors(multVector(subVectors(laserend,laserstart),(ship.pos[2]+xyzbounds[2]-laserstart[2])/(laserend[2]-laserstart[2])),laserstart);
+					if(Math.abs(intersect[0]-ship.pos[0])<xyzbounds[0] && Math.abs(intersect[1]-ship.pos[1])<xyzbounds[1])
+					{
+						console.log("HHITHITHITHITHIHIHTIHTIHTIHTIHITHITHITHITHI");
+					}
 				}
 			}
 		}
