@@ -225,7 +225,7 @@ var init = function(startpos, startvel, startrot) {
 	var skyBox = new THREE.Mesh(skyGeometry, skyMaterial);
 	skyboxScene.add(skyBox);
 
-	var geometry = new THREE.BoxGeometry(200, 200, 200);
+	var geometry = new THREE.BoxGeometry(11, 4, 2);
 	for (var i = 0; i < geometry.faces.length; i++) {
 		geometry.faces[i].color.setHex(Math.random() * 0xffffff);
 	}

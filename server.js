@@ -9,6 +9,10 @@ app.get("/", function(req, res) {
 	res.sendFile(__dirname + "/static/index.html");
 });
 
+var distance = function(a,b){
+	return Math.sqrt(Math.pow((a[0]-b[0]),2)+Math.pow((a[1]-b[1]),2)+Math.pow((a[2]-b[2]),2));
+}
+
 var applyEuler = function(v, e) {
 	return applyQuaternion(v, eulerToQuaternion(e));
 };
@@ -49,6 +53,14 @@ var addVectors = function(v1, v2) {
 	return [v1[0] + v2[0], v1[1] + v2[1], v1[2] + v2[2]];
 };
 
+var subVectors = function(v1, v2) {
+	return [v1[0] - v2[0], v1[1] - v2[1], v1[2] - v2[2]];
+};
+
+var multVector = function(v1, s){
+	return [v1[0]*s,v1[1]*s,v1[2]*s];
+}
+
 var room = io.of('/');
 
 var pickSpawn = function() {
@@ -81,6 +93,25 @@ function update() {
 		laser.life--;
 		laser.pos = addVectors(laser.pos, laser.vel);
 		//check for hits
+		for(var j in clients){
+			if(j!=laser.source && distance(laser.pos,clients[j].pos)<=50){
+				//check collisions here
+				let ship = clients[j];
+				console.log("possible hit"+Math.random());
+				laserstart = applyEuler(subVectors(laser.pos,laser.vel),ship.rot);
+				laserend = applyEuler(addVectors(laser.pos,laser.vel),ship.rot);
+				xyzbounds = [5,5,5];
+				console.log(laserstart);
+				console.log(laserend);
+				console.log(ship.pos);
+				if(Math.min(laserstart[2],laserend[2])<ship.pos[2]+xyzbounds[2] && Math.max(laserstart[2],laserend[2])>ship.pos[2]+xyzbounds[2]){
+					let v = subVectors(laserend,laserstart);
+					console.log(123);
+					var thing = addVectors(multVector(subVectors(laserend,laserstart),(ship.pos[2]+xyzbounds[2]-laserstart[2])/(laserend[2]-laserstart[2])),laserstart);
+					console.log(thing);
+				}
+			}
+		}
 	}
 	projectiles = projectiles.filter((o) => {
 		return o.life >= 0;
@@ -140,6 +171,7 @@ room.on("connection", function(socket) {
 		var ship = clients[data.id];
 		ship.shots++;
 		projectiles.push({ pos: ship.pos.slice(), vel: applyEuler([50, 0, 0], ship.rot), source: data.id, life: 100 });
+
 		socket.broadcast.emit('laser', data);
 	});
 });
