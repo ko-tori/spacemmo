@@ -100,17 +100,18 @@ function update() {
 				console.log("possible hit"+Math.random());
 				laserstart = applyEuler(subVectors(laser.pos,laser.vel),ship.rot);
 				laserend = applyEuler(addVectors(laser.pos,laser.vel),ship.rot);
+				//change bounds to fit the ship more
 				xyzbounds = [5,5,5];
-				console.log(laserstart);
-				console.log(laserend);
-				console.log(ship.pos);
+
 				if(Math.min(laserstart[2],laserend[2])<ship.pos[2]+xyzbounds[2] && Math.max(laserstart[2],laserend[2])>ship.pos[2]+xyzbounds[2]){
 					var intersect = addVectors(multVector(subVectors(laserend,laserstart),(ship.pos[2]+xyzbounds[2]-laserstart[2])/(laserend[2]-laserstart[2])),laserstart);
 					if(Math.abs(intersect[0]-ship.pos[0])<xyzbounds[0] && Math.abs(intersect[1]-ship.pos[1])<xyzbounds[1])
 					{
-						console.log("HHITHITHITHITHIHIHTIHTIHTIHTIHITHITHITHITHI");
+						console.log("Hit Legit");
 					}
 				}
+				//repeat for the other 5 planes
+
 			}
 		}
 	}
