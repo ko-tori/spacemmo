@@ -9,8 +9,8 @@ app.get("/", function(req, res) {
 	res.sendFile(__dirname + "/static/index.html");
 });
 
-var distance = function(a,b){
-	return Math.sqrt(Math.pow((a[0]-b[0]),2)+Math.pow((a[1]-b[1]),2)+Math.pow((a[2]-b[2]),2));
+var distance = function(a, b) {
+	return Math.sqrt(Math.pow((a[0] - b[0]), 2) + Math.pow((a[1] - b[1]), 2) + Math.pow((a[2] - b[2]), 2));
 }
 
 var applyEuler = function(v, e) {
@@ -57,8 +57,8 @@ var subVectors = function(v1, v2) {
 	return [v1[0] - v2[0], v1[1] - v2[1], v1[2] - v2[2]];
 };
 
-var multVector = function(v1, s){
-	return [v1[0]*s,v1[1]*s,v1[2]*s];
+var multVector = function(v1, s) {
+	return [v1[0] * s, v1[1] * s, v1[2] * s];
 }
 
 var room = io.of('/');
@@ -82,6 +82,29 @@ var clients = {};
 var projectiles = [];
 var interval = false;
 
+function checkCollision(ship, laser) {
+	var xyzbounds = [5, 5, 5];
+	if (distance(laser.pos, ship.pos) <= 50 + 10) { // 10 is arbitrary, supposed to be half the diagonal of the ship
+		//check collisions here
+		console.log("possible hit" + Math.random());
+		var laserstart = applyEuler(subVectors(laser.pos, laser.vel), ship.rot),
+			laserend = applyEuler(addVectors(laser.pos, laser.vel), ship.rot);
+		//change bounds to fit the ship more
+
+		if (Math.min(laserstart[2], laserend[2]) < ship.pos[2] + xyzbounds[2] && Math.max(laserstart[2], laserend[2]) > ship.pos[2] + xyzbounds[2]) {
+			var intersect = addVectors(multVector(subVectors(laserend, laserstart), (ship.pos[2] + xyzbounds[2] - laserstart[2]) / (laserend[2] - laserstart[2])), laserstart);
+			if (Math.abs(intersect[0] - ship.pos[0]) < xyzbounds[0] && Math.abs(intersect[1] - ship.pos[1]) < xyzbounds[1]) {
+				return true;
+			}
+		}
+
+		//repeat for the other 5 planes
+
+		//return true; //for testing
+	}
+	return false;
+}
+
 function update() {
 	// for (var id in ships) {
 	// 	if (ships.hasOwnProperty(id)) {
@@ -93,25 +116,12 @@ function update() {
 		laser.life--;
 		laser.pos = addVectors(laser.pos, laser.vel);
 		//check for hits
-		for(var j in clients){
-			if(j!=laser.source && distance(laser.pos,clients[j].pos)<=50){
-				//check collisions here
-				let ship = clients[j];
-				console.log("possible hit"+Math.random());
-				laserstart = applyEuler(subVectors(laser.pos,laser.vel),ship.rot);
-				laserend = applyEuler(addVectors(laser.pos,laser.vel),ship.rot);
-				//change bounds to fit the ship more
-				xyzbounds = [5,5,5];
-
-				if(Math.min(laserstart[2],laserend[2])<ship.pos[2]+xyzbounds[2] && Math.max(laserstart[2],laserend[2])>ship.pos[2]+xyzbounds[2]){
-					var intersect = addVectors(multVector(subVectors(laserend,laserstart),(ship.pos[2]+xyzbounds[2]-laserstart[2])/(laserend[2]-laserstart[2])),laserstart);
-					if(Math.abs(intersect[0]-ship.pos[0])<xyzbounds[0] && Math.abs(intersect[1]-ship.pos[1])<xyzbounds[1])
-					{
-						console.log("Hit Legit");
-					}
-				}
-				//repeat for the other 5 planes
-
+		for (var j in clients) {
+			if (j != laser.source && checkCollision(clients[j], laser)) {
+				console.log('Hit Legit.');
+				room.emit('hit', { source: laser.source, hit: j });
+				clients[j].deaths++;
+				clients[laser.source].kills++;
 			}
 		}
 	}
@@ -132,7 +142,7 @@ room.on("connection", function(socket) {
 		deaths: 0,
 		shots: 0
 	};
-	socket.emit('init', { pos: startpos, vel: startvel, rot: startrot});
+	socket.emit('init', { pos: startpos, vel: startvel, rot: startrot });
 	for (var id in clients) {
 		if (clients.hasOwnProperty(id)) {
 			socket.emit('join', { id: id, ship: clients[id] });
@@ -175,6 +185,17 @@ room.on("connection", function(socket) {
 		projectiles.push({ pos: ship.pos.slice(), vel: applyEuler([50, 0, 0], ship.rot), source: data.id, life: 100 });
 
 		socket.broadcast.emit('laser', data);
+	});
+
+	socket.on('retrieve data', function(data) {
+		var client = clients[socket.client.id];
+		socket.emit('retrieve data', { k: client.kills, d: client.deaths, s: client.shots });
+	});
+
+	socket.on('respawn', function(data) {
+		var client = clients[socket.client.id];
+		client.pos, client.rot = pickSpawn();
+		socket.emit('respawn', { pos: client.pos, rot: client.rot });
 	});
 });
 

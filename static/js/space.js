@@ -33,7 +33,6 @@ function updatePosition(e) {
 function checkKeys() {
 	if (keys[32]) {
 		fire(player.model.position, player.model.rotation);
-		sendLaser();
 	}
 	if (keys[87]) {
 		player.vel.x = Math.min(2.5, player.vel.x + 0.02);
@@ -81,7 +80,6 @@ document.addEventListener('touchend', function(e) {
 		if (t.identifier == touch.identifier) {
 			if (!touch.moved && t.pageX == touch.pageX && t.pageY == touch.pageY) {
 				fire(player.model.position, player.model.rotation);
-				sendLaser();
 			}
 			touch = false;
 			break;
@@ -173,6 +171,7 @@ var fire = function(position, rotation) {
 		var laserBurst = new LaserBurst(position, rotation);
 		lasers.push(laserBurst);
 		lastfiretime = time;
+		sendLaser();
 		return laserBurst;
 	}
 	return;
@@ -225,7 +224,7 @@ var init = function(startpos, startvel, startrot) {
 	var skyBox = new THREE.Mesh(skyGeometry, skyMaterial);
 	skyboxScene.add(skyBox);
 
-	var geometry = new THREE.BoxGeometry(11, 4, 2);
+	var geometry = new THREE.BoxGeometry(200, 200, 200);
 	for (var i = 0; i < geometry.faces.length; i++) {
 		geometry.faces[i].color.setHex(Math.random() * 0xffffff);
 	}
@@ -330,6 +329,23 @@ loader.load("assets/ship.json", function(geometry, materials) {
 
 		socket.on('laser', function(data) {
 			fire(ships[data.id].model.position, ships[data.id].model.rotation);
+		});
+
+		socket.on('hit', function(data) {
+			if (data.hit == player)
+				console.log('you got rekt by' + data.source);
+			else if (data.source == player)
+				console.log('you rekt ' + data.hit);
+			else
+				console.log(data.hit + ' got rekt by' + data.source);
+		});
+
+		socket.on('retrieve data', function(data) {
+			console.log(`Kills: ${data.k}\nDeaths: ${data.d}\nShots fired: ${data.s}`);
+		});
+
+		socket.on('respawn', function(data) {
+			console.log('spawn at ' + data.pos);
 		});
 	});
 });
