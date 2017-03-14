@@ -7,7 +7,7 @@ var skybox;
 var keys = Array(256).fill(false);
 
 var AXES = false;
-var CUBE = true;
+var CUBE = false;
 var morecubes = true;
 
 var updateCounter = 0;
@@ -111,11 +111,6 @@ function lockChangeAlert() {
 	}
 }
 
-var ambient = new THREE.AmbientLight(0x555555);
-scene.add(ambient);
-var light = new THREE.DirectionalLight(0xffffff);
-scene.add(light);
-
 var loader = new THREE.JSONLoader();
 var player;
 
@@ -166,15 +161,16 @@ function keyUp(event) {
 	keys[event.keyCode] = false;
 }
 
+var spawnLaser = function(position, rotation) {
+	lasers.push(new LaserBurst(position, rotation));
+}
+
 var fire = function(position, rotation) {
 	if (time > lastfiretime + 250) {
-		var laserBurst = new LaserBurst(position, rotation);
-		lasers.push(laserBurst);
-		lastfiretime = time;
+		spawnLaser(position, rotation);
 		sendLaser();
-		return laserBurst;
+		lastfiretime = time;
 	}
-	return;
 };
 
 var drawUI = function() {
@@ -208,7 +204,17 @@ var render = function() {
 };
 
 var init = function(startpos, startvel, startrot) {
-	console.log(startpos, startvel, startrot);
+	scene.children.forEach(ship => {
+		scene.remove(ship);
+	});
+	ships = {};
+
+	var ambient = new THREE.AmbientLight(0x555555);
+	scene.add(ambient);
+	var light = new THREE.DirectionalLight(0xffffff);
+	scene.add(light);
+
+	//console.log(startpos, startvel, startrot);
 	startpos = startpos || new Vector3(-1000, 0, 0);
 	startvel = startvel || new Vector3(1, 0, 0);
 	startrot = startrot || new Vector3(0, 0, 0);
@@ -298,54 +304,52 @@ loader.load("assets/ship.json", function(geometry, materials) {
 	Ship.materials = new THREE.MeshStandardMaterial();
 	//Ship.materials = new THREE.MultiMaterial(materials); // very slow
 	socket = io.connect('/');
-	socket.on('connect', function() {
-		socket.on('init', function(data) {
-			init(new Vector3(...data.pos), new Vector3(...data.vel), new Vector3(...data.rot));
-		});
-		socket.on('join', function(data) {
-			console.log(data.id + " joined");
-			var ship = new Ship(new Vector3(...data.ship.pos), new Vector3(...data.ship.vel), new Vector3(...data.ship.rot), new Vector3(0, 0, 0));
-			ships[data.id] = ship;
-		});
+	socket.on('init', function(data) {
+		init(new Vector3(...data.pos), new Vector3(...data.vel), new Vector3(...data.rot));
+	});
+	socket.on('join', function(data) {
+		console.log(data.id + " joined");
+		var ship = new Ship(new Vector3(...data.ship.pos), new Vector3(...data.ship.vel), new Vector3(...data.ship.rot), new Vector3(0, 0, 0));
+		ships[data.id] = ship;
+	});
 
-		socket.on('leave', function(data) {
-			console.log(data + " left");
-			scene.remove(ships[data].model);
-			delete ships[data];
-		});
+	socket.on('leave', function(data) {
+		console.log(data + " left");
+		scene.remove(ships[data].model);
+		delete ships[data];
+	});
 
-		socket.on('move', function(data) {
-			var ship = ships[data.id];
-			if (!ship) return;
-			[ship.model.position.x, ship.model.position.y, ship.model.position.z] = data.pos;
-			[ship.model.rotation.x, ship.model.rotation.y, ship.model.rotation.z] = data.rot;
-		});
+	socket.on('move', function(data) {
+		var ship = ships[data.id];
+		if (!ship) return;
+		[ship.model.position.x, ship.model.position.y, ship.model.position.z] = data.pos;
+		[ship.model.rotation.x, ship.model.rotation.y, ship.model.rotation.z] = data.rot;
+	});
 
-		socket.on('velchange', function(data) {
-			var ship = ships[data.id];
-			if (!ship) return;
-			ship.vel = data.vel;
-		});
+	socket.on('velchange', function(data) {
+		var ship = ships[data.id];
+		if (!ship) return;
+		ship.vel = data.vel;
+	});
 
-		socket.on('laser', function(data) {
-			fire(ships[data.id].model.position, ships[data.id].model.rotation);
-		});
+	socket.on('laser', function(data) {
+		spawnLaser(ships[data.id].model.position, ships[data.id].model.rotation);
+	});
 
-		socket.on('hit', function(data) {
-			if (data.hit == player)
-				console.log('you got rekt by' + data.source);
-			else if (data.source == player)
-				console.log('you rekt ' + data.hit);
-			else
-				console.log(data.hit + ' got rekt by' + data.source);
-		});
+	socket.on('hit', function(data) {
+		if (data.hit == socket.id)
+			console.log('you got rekt by ' + data.source);
+		else if (data.source == socket.id)
+			console.log('you rekt ' + data.hit);
+		else
+			console.log(data.hit + ' got rekt by' + data.source);
+	});
 
-		socket.on('retrieve data', function(data) {
-			console.log(`Kills: ${data.k}\nDeaths: ${data.d}\nShots fired: ${data.s}`);
-		});
+	socket.on('retrieve data', function(data) {
+		console.log(`Kills: ${data.k}\nDeaths: ${data.d}\nShots fired: ${data.s}`);
+	});
 
-		socket.on('respawn', function(data) {
-			console.log('spawn at ' + data.pos);
-		});
+	socket.on('respawn', function(data) {
+		console.log('spawn at ' + data.pos);
 	});
 });

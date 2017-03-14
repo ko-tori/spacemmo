@@ -9,6 +9,8 @@ app.get("/", function(req, res) {
 	res.sendFile(__dirname + "/static/index.html");
 });
 
+const LASER_VEL = 50;
+
 var distance = function(a, b) {
 	return Math.sqrt(Math.pow((a[0] - b[0]), 2) + Math.pow((a[1] - b[1]), 2) + Math.pow((a[2] - b[2]), 2));
 }
@@ -64,6 +66,7 @@ var multVector = function(v1, s) {
 var room = io.of('/');
 
 var pickSpawn = function() {
+	return [[Math.random()*100, 0, 0], [0, 0, 0]];
 	var u = Math.random();
 	var v = Math.random();
 	var theta = 2 * Math.PI * u;
@@ -83,20 +86,31 @@ var projectiles = [];
 var interval = false;
 
 function checkCollision(ship, laser) {
-	var xyzbounds = [5, 5, 5];
+	//var xyzbounds = [4.5, 2, 5]; // actual ship hitbox
+	var xyzbounds = [6, 3, 7]; // adjusted hitbox
 	if (distance(laser.pos, ship.pos) <= 50 + 10) { // 10 is arbitrary, supposed to be half the diagonal of the ship
 		//check collisions here
-		console.log("possible hit" + Math.random());
-		var laserstart = applyEuler(subVectors(laser.pos, laser.vel), ship.rot),
-			laserend = applyEuler(addVectors(laser.pos, laser.vel), ship.rot);
-		//change bounds to fit the ship more
+		//console.log("possible hit" + Math.random());
+		var laserpos = subVectors(laser.pos, ship.pos); // translate into ship space
+		var laservel = applyEuler(laser.vel, ship.rot);
+		var laserstart = subVectors(laserpos, laser.vel), // rotate into ship ref frame
+			laserend = addVectors(laserpos, laser.vel);
+		var u = multVector(laservel, 1 / LASER_VEL); // normalize the direction the laser is going
 
-		if (Math.min(laserstart[2], laserend[2]) < ship.pos[2] + xyzbounds[2] && Math.max(laserstart[2], laserend[2]) > ship.pos[2] + xyzbounds[2]) {
-			var intersect = addVectors(multVector(subVectors(laserend, laserstart), (ship.pos[2] + xyzbounds[2] - laserstart[2]) / (laserend[2] - laserstart[2])), laserstart);
-			if (Math.abs(intersect[0] - ship.pos[0]) < xyzbounds[0] && Math.abs(intersect[1] - ship.pos[1]) < xyzbounds[1]) {
-				return true;
+		for (var i = 0; i <= 2; i++) {
+			for (var j = -1; j <= 1; j += 2) {
+				if (Math.min(laserstart[i], laserend[i]) < j * xyzbounds[i] && Math.max(laserstart[i], laserend[i]) > j * xyzbounds[i]) { // make sure segment actually passes thru plane
+					let i2 = (i + 1) % 3,
+						i3 = (i + 2) % 3,
+						t = (j * xyzbounds[i] - laserstart[i]) / u[i]; // 't' when the unit vector where intersection with plane occurs
+					
+					var intersect = addVectors(multVector(u, t), laserstart);
+					if (Math.abs(intersect[i2]) < xyzbounds[i2] && Math.abs(intersect[i3]) < xyzbounds[i3])
+						return true;
+				}
 			}
 		}
+		
 
 		//repeat for the other 5 planes
 
@@ -111,17 +125,20 @@ function update() {
 	// 		ships[id].update();
 	// 	}
 	// }
-	for (var i = 0; i < projectiles.length; i++) {
+	for (var i = 0; i < projectiles.length; i++) {	
 		let laser = projectiles[i];
 		laser.life--;
 		laser.pos = addVectors(laser.pos, laser.vel);
+		//console.log(laser.pos);
 		//check for hits
 		for (var j in clients) {
-			if (j != laser.source && checkCollision(clients[j], laser)) {
-				console.log('Hit Legit.');
-				room.emit('hit', { source: laser.source, hit: j });
-				clients[j].deaths++;
-				clients[laser.source].kills++;
+			if (clients.hasOwnProperty(j)) {
+				if (j != laser.source && checkCollision(clients[j], laser)) {
+					console.log('Hit Legit.', laser.source, j);
+					room.emit('hit', { source: laser.source, hit: j });
+					clients[j].deaths++;
+					clients[laser.source].kills++;
+				}
 			}
 		}
 	}
@@ -133,7 +150,7 @@ function update() {
 room.on("connection", function(socket) {
 	console.log(socket.client.id + " joined");
 	var [startpos, startrot] = pickSpawn();
-	var startvel = [1, 0, 0];
+	var startvel = [0, 0, 0];//[1, 0, 0];
 	var startobj = {
 		pos: startpos,
 		vel: startvel,
@@ -182,7 +199,7 @@ room.on("connection", function(socket) {
 		data = { id: socket.client.id };
 		var ship = clients[data.id];
 		ship.shots++;
-		projectiles.push({ pos: ship.pos.slice(), vel: applyEuler([50, 0, 0], ship.rot), source: data.id, life: 100 });
+		projectiles.push({ pos: ship.pos.slice(), vel: applyEuler([LASER_VEL, 0, 0], ship.rot), source: data.id, life: 100 });
 
 		socket.broadcast.emit('laser', data);
 	});
